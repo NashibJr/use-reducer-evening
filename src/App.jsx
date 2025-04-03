@@ -1,46 +1,61 @@
 import React from "react";
-import "./App.css";
-import Counter from "./components/Counter";
-import Reducer from "./components/Reducer";
-import Events from "./components/Events";
-import Lists from "./components/Lists";
+import Input from "./components/Input";
+import { IoSearchOutline } from "react-icons/io5";
+import Book from "./components/Book";
 
-/**
- * state management:
- *  - state -> an object that has information about a component.
- *      -> useState hook
- *      -> useReducer hook
- *      -> useContext hook
- *      -> External libraries like redux.
- *
- * => useState hook
- *  const [state, setState] = React.useState(initialState)
- *  -> setState => A function that is used to update state
- * -> initialState => A values that the state holds initial
- */
+function App() {
+  const [books, setBooks] = React.useState([]);
+  const [filteredBooks, setFilteredBooks] = React.useState([]);
+  const [bookName, setBookName] = React.useState("");
 
-// function App() {
-//   const [count, setCount] = React.useState(0);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const response = await fetch("https://gutendex.com/books/");
+        const data = await response.json();
+        setBooks(data?.results);
+        setFilteredBooks(data?.results);
+      } catch (error) {
+        alert(error.message);
+      }
+    })();
+  }, []);
 
-//   const increment = () => setCount((prevState) => prevState + 1); //0 => 1
+  React.useEffect(() => {
+    if (bookName === "") {
+      setFilteredBooks(books);
+    } else {
+      setFilteredBooks(() =>
+        books?.filter((book) =>
+          book?.title?.toLowerCase().includes(bookName.toLowerCase())
+        )
+      );
+    }
+  }, [bookName, books]);
 
-//   const decrement = () => setCount((prevState) => prevState - 1);
-
-//   return (
-//     <>
-//       <Counter
-//         count={count}
-//         handleIncrement={increment}
-//         handleDecrement={decrement}
-//       />
-//     </>
-//   );
-// }
-
-class App extends React.Component {
-  render() {
-    return <Lists />;
-  }
+  return (
+    <main className="container">
+      <header className="header-container">
+        <IoSearchOutline color="#555" className="icon" size={25} />
+        <Input
+          placeholder="Search for a book name"
+          className="input-content"
+          name="bookName"
+          value={bookName}
+          onChange={(event) => setBookName(event.target.value)}
+        />
+      </header>
+      <section className="books-content">
+        {filteredBooks?.map((book) => (
+          <Book
+            key={book.id}
+            title={book?.title}
+            image={book?.formats?.["image/jpeg"]}
+            authors={book?.authors}
+          />
+        ))}
+      </section>
+    </main>
+  );
 }
-
 export default App;
